@@ -1,17 +1,35 @@
-
 $(document).ready(function(){
-  issuePoster = new GithubInteractor;
-  $('form').on("submit", function(){
-    submitForm(event);
-  });
+  // $('form').on("submit", function(){ ///why can't this be here?
+  //   submitForm(event);
+  // });
+  submitForm();
 });
 
-var issuePoster;
+function GithubInteractor(token) {
+  this.token = token;
+};
+
 //////EMPTY THIS BEFORE PUSHING
-class GithubInteractor {
-  constructor(token = "YOUWISH"){
-    this.token = token
+var issuePoster = new GithubInteractor("MONKEY BUSINESs");
+
+function  submitForm(){
+    $('form').on("submit", function(event){
+      var repo = $('#repoName').val();
+      var owner = $('#repoOwner').val();
+      var title = $('#title').val();
+      var body = $('#body').val();
+      createIssue(repo, owner, title, body);
+      event.preventDefault();
+    });
   };
+
+function handleResponse(response){
+  var newItem = `<a href=\"${response.url}\">${response.title}</a>`;
+  $('#issue').append(newItem);
+}
+
+function handleError(error){
+  console.log("Post error: " + error);
 }
 
 function  createIssue(repo, owner, title, body){
@@ -19,35 +37,13 @@ function  createIssue(repo, owner, title, body){
     var urlBase = "https://api.github.com/repos/";
     var urIssues;
     url = urlBase + owner + '/' + repo + '/issues';
-    // POST /repos/:owner/:repo/issues
-    urIssues = {title: title, body: body};
-    // console.log(url)
+    urIssues = { title: title, body: body };
     $.ajax({
       type: 'POST',
       url: url,
-      data: JSON.stringify(urIssues),
       headers: {
         Authorization: "token " + issuePoster.token
-      }
-    }).done(function(response){
-      // console.log("deal with it");
-      var newItem = `<a href=\"${response.url}\">${response.title}</a>`;
-      $('#issue').append(newItem);
-    }).fail(function(error){
-      console.log("Post error: " + error);
-    });
-  };
-
-function  submitForm(event){
-      event.preventDefault();
-    // $('form').click("submit", function(event){
-      var repo = $('#repoName').val();
-      var owner = $('#repoOwner').val();
-      var title = $('#title').val();
-      var body = $('#body').val();
-
-    // });
-
-      createIssue(repo, owner, title, body);
-      // event.preventDefault();
+      },
+      data: JSON.stringify(urIssues)
+    }).done(handleResponse).fail(handleError);
   };
